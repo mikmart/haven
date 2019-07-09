@@ -587,6 +587,10 @@ static readstat_error_t read_por_file_data(por_ctx_t *ctx) {
 
     while (1) {
         int finished = 0;
+        if (ctx->skipped_count < ctx->rows_skip) {
+            ctx->skipped_count++;
+            continue;
+        }
         for (i=0; i<ctx->var_count; i++) {
             spss_varinfo_t *info = &ctx->varinfo[i];
             readstat_value_t value = { .type = info->type };

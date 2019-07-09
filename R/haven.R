@@ -36,7 +36,7 @@ NULL
 #' read_sas(path)
 read_sas <- function(data_file, catalog_file = NULL,
                      encoding = NULL, catalog_encoding = encoding,
-                     col_select = NULL, n_max = Inf, cols_only = "DEPRECATED") {
+                     col_select = NULL, skip = 0L, n_max = Inf, cols_only = "DEPRECATED") {
   if (!missing(cols_only)) {
     warning("`cols_only` is deprecated. Please use `col_select` instead.", call. = FALSE)
     stopifnot(is.character(cols_only)) # used to only work with a char vector
@@ -62,8 +62,8 @@ read_sas <- function(data_file, catalog_file = NULL,
   }
 
   switch(class(spec_data)[1],
-    source_file = df_parse_sas_file(spec_data, spec_cat, encoding = encoding, catalog_encoding = catalog_encoding, cols_skip = cols_skip, n_max = n_max),
-    source_raw = df_parse_sas_raw(spec_data, spec_cat, encoding = encoding, catalog_encoding = catalog_encoding, cols_skip = cols_skip, n_max = n_max),
+    source_file = df_parse_sas_file(spec_data, spec_cat, encoding = encoding, catalog_encoding = catalog_encoding, cols_skip = cols_skip, skip = skip, n_max = n_max),
+    source_raw = df_parse_sas_raw(spec_data, spec_cat, encoding = encoding, catalog_encoding = catalog_encoding, cols_skip = cols_skip, skip = skip, n_max = n_max),
     stop("This kind of input is not handled", call. = FALSE)
   )
 }

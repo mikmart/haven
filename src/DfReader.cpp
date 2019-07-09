@@ -611,14 +611,17 @@ void haven_parse(readstat_parser_t* parser, DfReaderInput& builder_input, DfRead
 }
 
 template<FileExt ext, typename InputClass>
-List df_parse(const List& spec, const std::vector<std::string>& cols_skip, const long& n_max = -1,
+List df_parse(const List& spec, const std::vector<std::string>& cols_skip,
+              const long& n_max = -1,
               const std::string& encoding = "", const bool& user_na = false,
-              const List& catalog_spec = List(), const std::string& catalog_encoding = "") {
+              const List& catalog_spec = List(), const std::string& catalog_encoding = "",
+              const long& skip = 0) {
   DfReader builder(ext, user_na);
   builder.skipCols(cols_skip);
 
   readstat_parser_t* parser = haven_init_parser();
   haven_set_row_limit(parser, n_max);
+  readstat_set_rows_skip(parser, skip);
 
   if (ext == HAVEN_SAS7BDAT && catalog_spec.size() != 0) {
     InputClass cat_builder_input(catalog_spec, catalog_encoding);
@@ -641,13 +644,13 @@ List df_parse(const List& spec, const std::vector<std::string>& cols_skip, const
 // [[Rcpp::export]]
 List df_parse_sas_file(Rcpp::List spec_b7dat, Rcpp::List spec_b7cat,
                        std::string encoding, std::string catalog_encoding,
-                       std::vector<std::string> cols_skip, long n_max) {
-  return df_parse<HAVEN_SAS7BDAT, DfReaderInputFile>(spec_b7dat, cols_skip, n_max, encoding, false, spec_b7cat, catalog_encoding);
+                       std::vector<std::string> cols_skip, long skip, long n_max) {
+  return df_parse<HAVEN_SAS7BDAT, DfReaderInputFile>(spec_b7dat, cols_skip, n_max, encoding, false, spec_b7cat, catalog_encoding, skip);
 }
 // [[Rcpp::export]]
 List df_parse_sas_raw(Rcpp::List spec_b7dat, Rcpp::List spec_b7cat,
                       std::string encoding, std::string catalog_encoding,
-                      std::vector<std::string> cols_skip, long n_max) {
+                      std::vector<std::string> cols_skip, long skip, long n_max) {
   return df_parse<HAVEN_SAS7BDAT, DfReaderInputRaw>(spec_b7dat, cols_skip, n_max, encoding, false, spec_b7cat, catalog_encoding);
 }
 

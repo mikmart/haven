@@ -110,3 +110,21 @@ test_that("using skip returns correct number of rows", {
 
   expect_equal(rows_after_skipping(-1), rows_after_skipping(n - 1))
 })
+
+test_that("using skip returns correct subset of data", {
+  data_after_skipping <- function(n) {
+    read_sas(test_path("hadley.sas7bdat"), skip = n)
+  }
+
+  full_data <- data_after_skipping(0)
+  n <- nrow(full_data)
+
+  # reading with `skip` keeps col attributes, but subsetting with `[` doesn't
+  expect_equivalent(data_after_skipping(1), full_data[(1 + 1):n, ])
+  expect_equivalent(data_after_skipping(5), full_data[(5 + 1):n, ])
+  expect_equivalent(data_after_skipping(n - 1), full_data[n, ])
+  expect_equivalent(data_after_skipping(n + 0), full_data[0, ])
+  expect_equivalent(data_after_skipping(n + 1), full_data[0, ])
+
+  expect_equal(data_after_skipping(-1), data_after_skipping(n - 1))
+})

@@ -118,7 +118,7 @@ class DfReader {
   FileExt ext_;
   FileVendor vendor_;
 
-  int nrows_, nrowsAlloc_;
+  int nrows_, nrowsAlloc_, nrowsSkip_;
   int ncols_;
   List output_;
   CharacterVector names_;
@@ -140,13 +140,17 @@ public:
     colsSkip_ = cols_set;
   }
 
+  void skipRows(long n) {
+    nrowsSkip_ = n;
+  }
+
   void setInfo(int obs_count, int var_count) {
     if (obs_count < 0) {
       // If unknown, start with 1e5, and use doubling strategy
       nrowsAlloc_ = 1e5;
       nrows_ = 0;
     } else {
-      nrowsAlloc_ = nrows_ = obs_count;
+      nrowsAlloc_ = nrows_ = (obs_count -= nrowsSkip_) > 0 ? obs_count : 0;
     }
 
     if (var_count < 1) {
@@ -303,7 +307,9 @@ public:
     return READSTAT_HANDLER_OK;
   }
 
-  void setValue(int obs_index, readstat_variable_t *variable, readstat_value_t value) {
+  int setValue(int obs_index, readstat_variable_t *variable, readstat_value_t value) {
+    if ((obs_index -= nrowsSkip_) < 0)
+      return READSTAT_HANDLER_OK;
     int var_index = readstat_variable_get_index_after_skipping(variable);
 
     VarType var_type = var_types_[var_index];
@@ -335,6 +341,8 @@ public:
       break;
     }
     }
+
+    return READSTAT_HANDLER_OK;
   }
 
   void setValueLabels(const char *val_labels, readstat_value_t value,
@@ -440,8 +448,7 @@ int dfreader_value(int obs_index, readstat_variable_t *variable,
   if ((obs_index + 1) % 10000 == 0 || (variable->index + 1) % 10000 == 0)
     checkUserInterrupt();
 
-  ((DfReader*) ctx)->setValue(obs_index, variable, value);
-  return 0;
+  return ((DfReader*) ctx)->setValue(obs_index, variable, value);
 }
 int dfreader_value_label(const char *val_labels, readstat_value_t value,
                          const char *label, void *ctx) {
@@ -613,12 +620,13 @@ void haven_parse(readstat_parser_t* parser, DfReaderInput& builder_input, DfRead
 template<FileExt ext, typename InputClass>
 List df_parse(const List& spec, const std::vector<std::string>& cols_skip, const long& n_max = -1,
               const std::string& encoding = "", const bool& user_na = false,
-              const List& catalog_spec = List(), const std::string& catalog_encoding = "") {
+              const List& catalog_spec = List(), const std::string& catalog_encoding = "", long rows_skip = 0) {
   DfReader builder(ext, user_na);
   builder.skipCols(cols_skip);
+  builder.skipRows(rows_skip);
 
   readstat_parser_t* parser = haven_init_parser();
-  haven_set_row_limit(parser, n_max);
+  haven_set_row_limit(parser, n_max < 0 ? -1 : n_max + rows_skip);
 
   if (ext == HAVEN_SAS7BDAT && catalog_spec.size() != 0) {
     InputClass cat_builder_input(catalog_spec, catalog_encoding);
@@ -641,8 +649,8 @@ List df_parse(const List& spec, const std::vector<std::string>& cols_skip, const
 // [[Rcpp::export]]
 List df_parse_sas_file(Rcpp::List spec_b7dat, Rcpp::List spec_b7cat,
                        std::string encoding, std::string catalog_encoding,
-                       std::vector<std::string> cols_skip, long n_max) {
-  return df_parse<HAVEN_SAS7BDAT, DfReaderInputFile>(spec_b7dat, cols_skip, n_max, encoding, false, spec_b7cat, catalog_encoding);
+                       std::vector<std::string> cols_skip, long n_max, long rows_skip) {
+  return df_parse<HAVEN_SAS7BDAT, DfReaderInputFile>(spec_b7dat, cols_skip, n_max, encoding, false, spec_b7cat, catalog_encoding, rows_skip);
 }
 // [[Rcpp::export]]
 List df_parse_sas_raw(Rcpp::List spec_b7dat, Rcpp::List spec_b7cat,

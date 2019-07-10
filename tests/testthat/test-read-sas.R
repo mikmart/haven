@@ -95,3 +95,18 @@ test_that("can select columns with a catalog file", {
   )
   expect_named(out, "workshop")
 })
+
+test_that("using skip returns correct number of rows", {
+  rows_after_skipping <- function(n) {
+    nrow(read_sas(test_path("hadley.sas7bdat"), skip = n))
+  }
+
+  n <- rows_after_skipping(0)
+
+  expect_equal(rows_after_skipping(1), n - 1)
+  expect_equal(rows_after_skipping(n - 1), 1)
+  expect_equal(rows_after_skipping(n + 0), 0)
+  expect_equal(rows_after_skipping(n + 1), 0)
+
+  expect_equal(rows_after_skipping(-1), rows_after_skipping(n - 1))
+})

@@ -806,6 +806,13 @@ static readstat_error_t sav_read_uncompressed_data(sav_ctx_t *ctx,
     size_t buffer_len = ctx->var_offset * 8;
 
     buffer = readstat_malloc(buffer_len);
+    if (ctx->rows_skip) {
+        if (io->seek(buffer_len * ctx->rows_skip, READSTAT_SEEK_CUR, io->io_ctx) == -1) {
+            retval = READSTAT_ERROR_SEEK;
+            goto done;
+        }
+        ctx->skipped_row_count = ctx->rows_skip;
+    }
 
     while (ctx->row_limit == -1 || ctx->current_row < ctx->row_limit) {
         retval = sav_update_progress(ctx);
@@ -1579,7 +1586,7 @@ readstat_error_t readstat_parse_sav(readstat_parser_t *parser, const char *path,
         ctx->record_count = 0;
     } else {
         ctx->record_count -= ctx->rows_skip;
-    }    
+    }
     if (parser->row_limit > 0 && (parser->row_limit < ctx->record_count || ctx->record_count == -1)) {
         ctx->row_limit = parser->row_limit;
     } else {

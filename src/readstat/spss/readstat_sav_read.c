@@ -1582,10 +1582,12 @@ readstat_error_t readstat_parse_sav(readstat_parser_t *parser, const char *path,
     ctx->file_size = file_size;
 
     ctx->rows_skip = parser->rows_skip;
-    if (ctx->record_count < ctx->rows_skip) {
-        ctx->record_count = 0;
-    } else {
-        ctx->record_count -= ctx->rows_skip;
+    if (ctx->record_count > 0) {
+        if (ctx->record_count < ctx->rows_skip) {
+            ctx->record_count = 0;
+        } else {
+            ctx->record_count -= ctx->rows_skip;
+        }
     }
     if (parser->row_limit > 0 && (parser->row_limit < ctx->record_count || ctx->record_count == -1)) {
         ctx->row_limit = parser->row_limit;

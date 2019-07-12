@@ -658,6 +658,14 @@ static readstat_error_t dta_handle_rows(dta_ctx_t *ctx) {
         goto cleanup;
     }
 
+    if (ctx->rows_skip) {
+        if (io->seek(ctx->record_len * ctx->rows_skip, READSTAT_SEEK_CUR, io->io_ctx) == -1) {
+            retval = READSTAT_ERROR_SEEK;
+            goto cleanup;
+        }
+        ctx->skipped_row_count = ctx->rows_skip;
+    }
+
     for (i=0; i<ctx->row_limit; i++) {
         if (io->read(buf, ctx->record_len, io->io_ctx) != ctx->record_len) {
             retval = READSTAT_ERROR_READ;
@@ -1178,6 +1186,14 @@ readstat_error_t readstat_parse_dta(readstat_parser_t *parser, const char *path,
     ctx->user_ctx = user_ctx;
     ctx->file_size = file_size;
     ctx->handle = parser->handlers;
+
+    ctx->rows_skip = parser->rows_skip;
+    if (ctx->nobs < ctx->rows_skip) {
+        ctx->nobs = 0;
+    } else {        
+        ctx->nobs -= ctx->rows_skip;
+    }
+
     ctx->row_limit = ctx->nobs;
     if (parser->row_limit > 0 && parser->row_limit < ctx->nobs)
         ctx->row_limit = parser->row_limit;

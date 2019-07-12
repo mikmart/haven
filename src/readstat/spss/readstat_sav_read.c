@@ -678,6 +678,10 @@ static readstat_error_t sav_read_dictionary_termination_record(sav_ctx_t *ctx) {
 }
 
 static readstat_error_t sav_process_row(unsigned char *buffer, size_t buffer_len, sav_ctx_t *ctx) {
+    if (ctx->skipped_row_count < ctx->rows_skip) {
+        ctx->skipped_row_count++;
+        return READSTAT_OK;
+    }
     readstat_error_t retval = READSTAT_OK;
     double fp_value;
     int offset = 0;
@@ -1569,12 +1573,19 @@ readstat_error_t readstat_parse_sav(readstat_parser_t *parser, const char *path,
     ctx->output_encoding = parser->output_encoding;
     ctx->user_ctx = user_ctx;
     ctx->file_size = file_size;
+
+    ctx->rows_skip = parser->rows_skip;
+    if (ctx->record_count < ctx->rows_skip) {
+        ctx->record_count = 0;
+    } else {
+        ctx->record_count -= ctx->rows_skip;
+    }    
     if (parser->row_limit > 0 && (parser->row_limit < ctx->record_count || ctx->record_count == -1)) {
         ctx->row_limit = parser->row_limit;
     } else {
         ctx->row_limit = ctx->record_count;
     }
-    
+
     if ((retval = sav_parse_timestamp(ctx, &header)) != READSTAT_OK)
         goto cleanup;
 

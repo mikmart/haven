@@ -234,7 +234,8 @@ static readstat_error_t sas7bdat_parse_row_size_subheader(const char *subheader,
     }
 
     ctx->page_row_count = page_row_count;
-    if (ctx->rows_skip > total_row_count) {
+    
+    if (total_row_count < ctx->rows_skip) {
         total_row_count = 0;
     } else {        
         total_row_count -= ctx->rows_skip;

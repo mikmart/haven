@@ -663,7 +663,7 @@ static readstat_error_t dta_handle_rows(dta_ctx_t *ctx) {
             retval = READSTAT_ERROR_SEEK;
             goto cleanup;
         }
-        ctx->skipped_row_count = ctx->rows_skip;
+        ctx->rows_skip = 0;
     }
 
     for (i=0; i<ctx->row_limit; i++) {

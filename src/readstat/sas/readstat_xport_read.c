@@ -32,7 +32,6 @@ typedef struct xport_ctx_s {
     int            rows_skip;
     size_t         row_length;
     int            parsed_row_count;
-    int            skipped_row_count;
     char           file_label[40*4+1];
     char           table_name[32*4+1];
 
@@ -607,7 +606,7 @@ static readstat_error_t xport_read_data(xport_ctx_t *ctx) {
             retval = READSTAT_ERROR_SEEK;
             goto cleanup;
         }
-        ctx->skipped_row_count = ctx->rows_skip;
+        ctx->rows_skip = 0;
     }
 
     memset(blank_row, ' ', ctx->row_length);

@@ -678,8 +678,8 @@ static readstat_error_t sav_read_dictionary_termination_record(sav_ctx_t *ctx) {
 }
 
 static readstat_error_t sav_process_row(unsigned char *buffer, size_t buffer_len, sav_ctx_t *ctx) {
-    if (ctx->skipped_row_count < ctx->rows_skip) {
-        ctx->skipped_row_count++;
+    if (ctx->rows_skip) {
+        ctx->rows_skip--;
         return READSTAT_OK;
     }
     readstat_error_t retval = READSTAT_OK;
@@ -811,7 +811,7 @@ static readstat_error_t sav_read_uncompressed_data(sav_ctx_t *ctx,
             retval = READSTAT_ERROR_SEEK;
             goto done;
         }
-        ctx->skipped_row_count = ctx->rows_skip;
+        ctx->rows_skip = 0;
     }
 
     while (ctx->row_limit == -1 || ctx->current_row < ctx->row_limit) {

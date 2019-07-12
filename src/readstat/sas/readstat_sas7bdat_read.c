@@ -50,7 +50,6 @@ typedef struct sas7bdat_ctx_s {
     uint32_t        column_count;
     uint32_t        row_limit;
     uint32_t        rows_skip;
-    uint32_t        skipped_row_count;
 
     uint64_t        header_size;
     uint64_t        page_count;
@@ -432,8 +431,8 @@ cleanup:
 static readstat_error_t sas7bdat_parse_single_row(const char *data, sas7bdat_ctx_t *ctx) {
     if (ctx->parsed_row_count == ctx->row_limit)
         return READSTAT_OK;
-    if (ctx->skipped_row_count < ctx->rows_skip) {
-        ctx->skipped_row_count++;
+    if (ctx->rows_skip) {
+        ctx->rows_skip--;
         return READSTAT_OK;
     }
 

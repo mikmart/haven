@@ -89,7 +89,6 @@ typedef struct dta_ctx_s {
     int64_t        row_limit;
     int64_t        current_row;
     int64_t        rows_skip;
-    int64_t        skipped_row_count;
 
     unsigned int   bswap:1;
     unsigned int   machine_is_twos_complement:1;
